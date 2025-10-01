@@ -1,0 +1,16 @@
+[project]
+name = "maarco"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dash>=3.2.0",
+    "pandas>=2.3.2",
+    "paramiko>=4.0.0",
+    "pygpsclient>=1.5.14",
+    "pynmeagps>=1.0.53",
+    "pyrtcm>=1.1.9",
+    "textual>=6.1.0",
+    "textual-speedups>=0.2.0",
+]
