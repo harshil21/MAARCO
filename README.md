@@ -50,3 +50,18 @@ Replace `MOUNTPOINT` with your actual NTRIP mount point. If you don't have one, 
 ### Running without the Pi:
 
 You can also run the application on your computer if you have a GPS device connected via USB or serial port. Just make sure to specify the correct serial port in the code (currently set to `/dev/ttyUSB0`).
+
+
+### Running the example scripts:
+
+You can run the example Python scripts to decode log files or stream NMEA data. For example, to decode a log file:
+
+```bash
+uv run --script examples/decode_log_file.py
+```
+
+Or to run a Rust example:
+
+```bash
+cargo run --example file_name[no .rs]
+```
