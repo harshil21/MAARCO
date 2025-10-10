@@ -3,11 +3,14 @@ use clap::Parser;
 use crossterm::execute;
 use std::io::{Write, stdout};
 use std::sync::mpsc::{self, TryRecvError};
+use std::path::PathBuf;
+
 
 mod display;
 mod gps;
 mod ntrip;
 mod serial;
+mod logging;
 
 
 #[derive(Parser, Debug)]
@@ -16,12 +19,16 @@ struct Args {
     /// NTRIP mountpoint (e.g., MOUNTPOINT)
     #[arg(long)]
     ntrip_mount: Option<String>,
+    /// Log file path (default: flight_data.csv)
+    #[arg(long, default_value = "flight_data.csv")]
+    log_file: PathBuf,
 }
 
 fn main() -> std::io::Result<()> {
     // fn main() -> () {
     let args = Args::parse();
 
+    let logger = logging::Logger::new(args.log_file)?;
     let mut port = serial::open_port();
     let mut parser = gps::parser::build_parser();
     let mut stdout = stdout();
@@ -51,6 +58,7 @@ fn main() -> std::io::Result<()> {
 
         for sentence in &sentences {
             gps::parser::parse_nmea_sentence(&mut parser, sentence);
+            logger.log_nmea(sentence);
         }
 
         // Write any pending NTRIP correction data to serial
@@ -58,6 +66,8 @@ fn main() -> std::io::Result<()> {
             match rx.try_recv() {
                 Ok(data) => {
                     // println!("Writing {} bytes of NTRIP data to serial", data.len());
+                    // Log RTCM data
+                    logger.log_rtcm(&data);
                     port.as_mut().unwrap().write_all(&data)?;
                     port.as_mut().unwrap().flush()?;
                 }

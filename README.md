@@ -41,7 +41,7 @@ You can cross compile via cross and Docker - `docker build -t maarco-aarch64-ude
 
 4. Finally, run the application:
     ```bash
-    cargo run --release -- --ntrip-mount MOUNTPOINT
+    cargo run --release -- --ntrip-mount MOUNTPOINT --log-file logs/test_1.csv
     ```
 
 Replace `MOUNTPOINT` with your actual NTRIP mount point. If you don't have one, you can omit the `--ntrip-mount` argument, and the application will run without NTRIP support (so you will not get RTK corrections).
