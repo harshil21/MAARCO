@@ -8,4 +8,8 @@ dependencies = [
     "pygpsclient>=1.5.14",
     "pynmeagps>=1.0.53",
     "pyrtcm>=1.1.9",
+    "rpi-hardware-pwm>=0.3.0",
+    "textual>=6.3.0",
+    "textual-dev>=1.8.0",
+    "textual-speedups>=0.2.0",
 ]

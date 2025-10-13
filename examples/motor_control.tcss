@@ -1,0 +1,14 @@
+#controls {
+    background: blue;
+    height: auto;
+}
+
+#displays {
+    background: green;
+    height: auto;
+}
+
+#pid_controls {
+    background: orange;
+    height: auto;
+}
