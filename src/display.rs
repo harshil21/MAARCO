@@ -9,6 +9,8 @@ use std::io::Write;
 
 use nmea::{Nmea, sentences::FixType};
 
+use crate::usb_serial::SensorData;
+
 pub struct Display {
     prev_lines: u16,
 }
@@ -25,7 +27,7 @@ impl Display {
         Self { prev_lines: 0 }
     }
 
-    pub fn update<W: Write>(&mut self, stdout: &mut W, parser: &Nmea) -> std::io::Result<()> {
+    pub fn update<W: Write>(&mut self, stdout: &mut W, parser: &Nmea, arduino_data: &SensorData) -> std::io::Result<()> {
         // Get satellites info (like SNR):
         let sats = parser.satellites();
         let mut avg_snr = 0u32;
@@ -98,6 +100,36 @@ impl Display {
                 "Avg SNR".to_string(),
                 format!("{:?}", avg_snr_value),
                 Some("db-Hz".to_string()),
+            ),
+            DisplayItem::Data(
+                "Sonar".to_string(),
+                format!("{:?}", arduino_data.sonar_mm),
+                Some("mm".to_string()),
+            ),
+            DisplayItem::Data(
+                "ToF1".to_string(),
+                format!("{:?}", arduino_data.tof1_mm),
+                Some("mm".to_string()),
+            ),
+            DisplayItem::Data(
+                "ToF2".to_string(),
+                format!("{:?}", arduino_data.tof2_mm),
+                Some("mm".to_string()),
+            ),
+            DisplayItem::Data(
+                "Roll".to_string(),
+                format!("{:?}", arduino_data.roll),
+                Some("°".to_string()),
+            ),
+            DisplayItem::Data(
+                "Pitch".to_string(),
+                format!("{:?}", arduino_data.pitch),
+                Some("°".to_string()),
+            ),
+            DisplayItem::Data(
+                "Yaw".to_string(),
+                format!("{:?}", arduino_data.yaw),
+                Some("°".to_string()),
             ),
         ];
 

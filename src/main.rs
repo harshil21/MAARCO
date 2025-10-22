@@ -9,8 +9,9 @@ use std::path::PathBuf;
 mod display;
 mod gps;
 mod ntrip;
-mod serial;
+mod gps_serial;
 mod logging;
+mod usb_serial;
 
 
 #[derive(Parser, Debug)]
@@ -25,11 +26,12 @@ struct Args {
 }
 
 fn main() -> std::io::Result<()> {
-    // fn main() -> () {
     let args = Args::parse();
 
     let logger = logging::Logger::new(args.log_file)?;
-    let mut port = serial::open_port();
+    let mut gps_port = gps_serial::open_port();
+    let mut usb_port = usb_serial::open_port();
+
     let mut parser = gps::parser::build_parser();
     let mut stdout = stdout();
     let mut display = display::Display::new();
@@ -49,16 +51,24 @@ fn main() -> std::io::Result<()> {
     }
 
     loop {
-        let serial_data = port.as_mut().unwrap().read_sentences();
+        let gps_serial_data = gps_port.as_mut().unwrap().read_sentences();
+        let arduino_serial_data = usb_port.as_mut().unwrap().read_line();
 
-        if serial_data.is_err() {
+        if gps_serial_data.is_err() {
             continue;
         }
-        let sentences = serial_data.unwrap();
+        let sentences = gps_serial_data.unwrap();
+        if arduino_serial_data.is_err() {
+            continue;
+        }
+        let sensor_data = arduino_serial_data.unwrap();
 
         for sentence in &sentences {
             gps::parser::parse_nmea_sentence(&mut parser, sentence);
             logger.log_nmea(sentence);
+        }
+        if let Some(ref data) = sensor_data {
+            logger.log_sensor_data(&data);
         }
 
         // Write any pending NTRIP correction data to serial
@@ -68,8 +78,8 @@ fn main() -> std::io::Result<()> {
                     // println!("Writing {} bytes of NTRIP data to serial", data.len());
                     // Log RTCM data
                     logger.log_rtcm(&data);
-                    port.as_mut().unwrap().write_all(&data)?;
-                    port.as_mut().unwrap().flush()?;
+                    gps_port.as_mut().unwrap().write_all(&data)?;
+                    gps_port.as_mut().unwrap().flush()?;
                 }
                 Err(TryRecvError::Empty) => break,
                 Err(e) => {
@@ -79,6 +89,6 @@ fn main() -> std::io::Result<()> {
             }
         }
 
-        display.update(&mut stdout, &parser)?;
+        display.update(&mut stdout, &parser, &sensor_data.unwrap())?;
     }
 }

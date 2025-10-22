@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
+use crate::usb_serial::SensorData;
+
 
 /// Represents different types of data that can be logged
 #[derive(Debug, Clone)]
@@ -41,6 +43,19 @@ pub enum LogData {
         packet_count: u32,
         data: String,
     },
+    SensorData {
+        timestamp: u64,
+        time_ms: u32,
+        roll: f32,
+        pitch: f32,
+        yaw: f32,
+        sonar_mm: f32,
+        tof1_mm: f32,
+        tof2_mm: f32,
+        // acc_x: f32,
+        // acc_y: f32,
+        // acc_z: f32,
+    }
 }
 
 /// Logger handle that can be cloned and sent to other threads
@@ -123,6 +138,20 @@ impl Logger {
             data,
         });
     }
+
+    pub fn log_sensor_data(&self, data: &SensorData) {
+        let timestamp = get_timestamp_nanos();
+        let _ = self.tx.send(LogData::SensorData {
+            timestamp,
+            time_ms: data.time_ms,
+            roll: data.roll,
+            pitch: data.pitch,
+            yaw: data.yaw,
+            sonar_mm: data.sonar_mm,
+            tof1_mm: data.tof1_mm,
+            tof2_mm: data.tof2_mm,
+        });
+    }
 }
 
 /// Main logging thread function
@@ -151,6 +180,12 @@ fn run_logger(rx: Receiver<LogData>, log_file_path: PathBuf) -> std::io::Result<
         "snr",
         "packet_count",
         "radio_data",
+        "sonar_mm",
+        "tof1_mm",
+        "tof2_mm",
+        "roll",
+        "pitch",
+        "yaw",
     ])?;
 
     writer.flush()?;
@@ -195,6 +230,12 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 String::new(),
                 String::new(),
                 String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
             ])?;
         }
         LogData::RtcmData {
@@ -210,6 +251,12 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 message_type.map_or(String::new(), |m| m.to_string()),
                 data_length.to_string(),
                 data_hex,
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
                 String::new(),
                 String::new(),
                 String::new(),
@@ -254,6 +301,12 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 String::new(),
                 String::new(),
                 String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
             ])?;
         }
         LogData::Barometer {
@@ -278,6 +331,12 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 pressure_pa.to_string(),
                 temperature_c.to_string(),
                 altitude_m.map_or(String::new(), |a| a.to_string()),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
                 String::new(),
                 String::new(),
                 String::new(),
@@ -311,10 +370,54 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 snr.to_string(),
                 packet_count.to_string(),
                 data,
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+            ])?;
+        }
+
+        LogData::SensorData {
+            timestamp,
+            time_ms: _,
+            sonar_mm,
+            tof1_mm,
+            tof2_mm,
+            roll,
+            pitch,
+            yaw,
+        } => {
+            writer.write_record(&[
+                timestamp.to_string(),
+                "ARDUINO".to_string(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+                sonar_mm.to_string(),
+                tof1_mm.to_string(),
+                tof2_mm.to_string(),
+                roll.to_string(),
+                pitch.to_string(),
+                yaw.to_string(),
             ])?;
         }
     }
-
     Ok(())
 }
 
