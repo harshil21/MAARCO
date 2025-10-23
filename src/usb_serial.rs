@@ -2,6 +2,7 @@ use serialport;
 use serialport::Error;
 use serialport::TTYPort;
 use std::io::{self, BufRead, BufReader, Write};
+use std::path::PathBuf;
 use std::time::Duration;
 
 
@@ -11,6 +12,8 @@ pub struct SensorData {
     pub roll: f32,
     pub pitch: f32,
     pub yaw: f32,
+    pub current_motor_1_ma: f32,
+    pub current_motor_2_ma: f32,
     // pub acc_x: f32,
     // pub acc_y: f32,
     // pub acc_z: f32,
@@ -26,21 +29,20 @@ pub struct ArduinoSerialPort {
 }
 
 
-pub fn open_port() -> Result<ArduinoSerialPort, Error> {
-    const PORT_NAME: &str = "/dev/ttyACM0";
+pub fn open_port(port: PathBuf) -> Result<ArduinoSerialPort, Error> {
     const BAUD_RATE: u32 = 9600;
 
-    match serialport::new(PORT_NAME, BAUD_RATE)
+    match serialport::new(port.to_string_lossy(), BAUD_RATE)
         .timeout(Duration::from_secs(1))  // 1s timeout for reads
         .open_native()
     {
-        Ok(port) => {
-            println!("Successfully opened port {} at {} baud.", PORT_NAME, BAUD_RATE);
-            let reader = BufReader::new(port);  // Wrap for buffered line reads
+        Ok(arduino_port) => {
+            println!("Successfully opened port {} at {} baud.", port.to_string_lossy(), BAUD_RATE);
+            let reader = BufReader::new(arduino_port);  // Wrap for buffered line reads
             Ok(ArduinoSerialPort { reader })
         }
         Err(e) => {
-            eprintln!("Failed to open \"{}\". Error: {}", PORT_NAME, e);
+            eprintln!("Failed to open \"{}\". Error: {}", port.to_string_lossy(), e);
             Err(e)
         }
     }
@@ -62,10 +64,10 @@ impl ArduinoSerialPort {
 
                 // Parse the line into SensorData
                 let parts: Vec<&str> = trimmed.split(",").map(|s| s.trim()).collect();
-                if parts.len() != 7 {
+                if parts.len() != 9 {
                     return Err(Error::new(
                         serialport::ErrorKind::Io(std::io::ErrorKind::InvalidData),
-                        format!("Expected 7 parts, got {}", parts.len()),
+                        format!("Expected 9 parts, got {}", parts.len()),
                     ));
                 }
 
@@ -73,9 +75,11 @@ impl ArduinoSerialPort {
                 let roll: f32 = parts[1].parse().unwrap();
                 let pitch: f32 = parts[2].parse().unwrap();
                 let yaw: f32 = parts[3].parse().unwrap();
-                let sonar_mm: f32 = parts[4].parse().unwrap();
-                let tof1_mm: f32 = parts[5].parse().unwrap();
-                let tof2_mm: f32 = parts[6].parse().unwrap();
+                let current_motor_1_ma: f32 = parts[4].parse().unwrap();
+                let current_motor_2_ma: f32 = parts[5].parse().unwrap();
+                let sonar_mm: f32 = parts[6].parse().unwrap();
+                let tof1_mm: f32 = parts[7].parse().unwrap();
+                let tof2_mm: f32 = parts[8].parse().unwrap();
                 // let acc_x: f32 = parts[7].parse().unwrap();
                 // let acc_y: f32 = parts[8].parse().unwrap();
                 // let acc_z: f32 = parts[9].parse().unwrap();
@@ -88,6 +92,8 @@ impl ArduinoSerialPort {
                     roll,
                     pitch,
                     yaw,
+                    current_motor_1_ma,
+                    current_motor_2_ma,
                     // acc_x,
                     // acc_y,
                     // acc_z,

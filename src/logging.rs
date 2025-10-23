@@ -49,6 +49,8 @@ pub enum LogData {
         roll: f32,
         pitch: f32,
         yaw: f32,
+        current_motor_1_ma: f32,
+        current_motor_2_ma: f32,
         sonar_mm: f32,
         tof1_mm: f32,
         tof2_mm: f32,
@@ -147,6 +149,8 @@ impl Logger {
             roll: data.roll,
             pitch: data.pitch,
             yaw: data.yaw,
+            current_motor_1_ma: data.current_motor_1_ma,
+            current_motor_2_ma: data.current_motor_2_ma,    
             sonar_mm: data.sonar_mm,
             tof1_mm: data.tof1_mm,
             tof2_mm: data.tof2_mm,
@@ -186,6 +190,8 @@ fn run_logger(rx: Receiver<LogData>, log_file_path: PathBuf) -> std::io::Result<
         "roll",
         "pitch",
         "yaw",
+        "current_motor_1_ma",
+        "current_motor_2_ma",
     ])?;
 
     writer.flush()?;
@@ -214,6 +220,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 timestamp.to_string(),
                 "NMEA".to_string(),
                 sentence,
+                String::new(),
+                String::new(),
                 String::new(),
                 String::new(),
                 String::new(),
@@ -270,6 +278,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 String::new(),
                 String::new(),
                 String::new(),
+                String::new(),
+                String::new(),
             ])?;
         }
         LogData::Imu {
@@ -294,6 +304,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 gyro_x.to_string(),
                 gyro_y.to_string(),
                 gyro_z.to_string(),
+                String::new(),
+                String::new(),
                 String::new(),
                 String::new(),
                 String::new(),
@@ -341,6 +353,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 String::new(),
                 String::new(),
                 String::new(),
+                String::new(),
+                String::new(),
             ])?;
         }
         LogData::RadioTelemetry {
@@ -376,6 +390,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 String::new(),
                 String::new(),
                 String::new(),
+                String::new(),
+                String::new(),
             ])?;
         }
 
@@ -385,6 +401,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
             sonar_mm,
             tof1_mm,
             tof2_mm,
+            current_motor_1_ma,
+            current_motor_2_ma,
             roll,
             pitch,
             yaw,
@@ -412,6 +430,8 @@ fn write_log_entry(writer: &mut Writer<File>, data: LogData) -> csv::Result<()> 
                 sonar_mm.to_string(),
                 tof1_mm.to_string(),
                 tof2_mm.to_string(),
+                current_motor_1_ma.to_string(),
+                current_motor_2_ma.to_string(),
                 roll.to_string(),
                 pitch.to_string(),
                 yaw.to_string(),

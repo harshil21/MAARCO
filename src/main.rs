@@ -19,9 +19,15 @@ mod usb_serial;
 struct Args {
     /// NTRIP mountpoint (e.g., MOUNTPOINT)
     #[arg(long)]
-    ntrip_mount: Option<String>,
-    /// Log file path (default: flight_data.csv)
-    #[arg(long, default_value = "flight_data.csv")]
+    ntrip_mount: Option<String>,  // E.g. "VMAX-LAND-1"
+    /// GPS serial port path (e.g., /dev/ttyUSB0)
+    #[arg(long)]
+    gps_port: PathBuf,
+    /// Arduino serial port path (e.g., /dev/ttyACM0)
+    #[arg(long)]
+    arduino_port: PathBuf,
+    /// Log file path (default: bot_test.csv)
+    #[arg(long, default_value = "bot_test.csv")]
     log_file: PathBuf,
 }
 
@@ -29,8 +35,8 @@ fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
     let logger = logging::Logger::new(args.log_file)?;
-    let mut gps_port = gps_serial::open_port();
-    let mut usb_port = usb_serial::open_port();
+    let mut gps_port = gps_serial::open_port(args.gps_port);
+    let mut usb_port = usb_serial::open_port(args.arduino_port);
 
     let mut parser = gps::parser::build_parser();
     let mut stdout = stdout();

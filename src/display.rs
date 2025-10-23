@@ -117,6 +117,16 @@ impl Display {
                 Some("mm".to_string()),
             ),
             DisplayItem::Data(
+                "Current Motor 1:".to_string(),
+                format!("{:?}", arduino_data.current_motor_1_ma),
+                Some("A".to_string()),
+            ),
+            DisplayItem::Data(
+                "Current Motor 2:".to_string(),
+                format!("{:?}", arduino_data.current_motor_2_ma),
+                Some("A".to_string()),
+            ),
+            DisplayItem::Data(
                 "Roll".to_string(),
                 format!("{:?}", arduino_data.roll),
                 Some("°".to_string()),

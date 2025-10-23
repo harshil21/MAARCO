@@ -3,6 +3,7 @@ use serialport::Error;
 use serialport::TTYPort;
 use std::io::Read;
 use std::io::{self, Write};
+use std::path::PathBuf;
 
 
 #[derive(Debug)]
@@ -11,23 +12,22 @@ pub struct SerialReader {
     gps_buffer: String,
 }
 
-pub fn open_port() -> Result<SerialReader, Error> {
-    const PORT_NAME: &str = "/dev/ttyUSB0";
+pub fn open_port(port: PathBuf) -> Result<SerialReader, Error> {
     const BAUD_RATE: u32 = 115_200;
 
-    match serialport::new(PORT_NAME, BAUD_RATE)
+    match serialport::new(port.to_string_lossy(), BAUD_RATE)
         .timeout(std::time::Duration::from_millis(10))
         .open_native()
     {
-        Ok(port) => {
-            println!("Successfully opened port {}", PORT_NAME);
+        Ok(gps_port) => {
+            println!("Successfully opened port {}", port.to_string_lossy());
             Ok(SerialReader {
-                gps_port: port,
+                gps_port: gps_port,
                 gps_buffer: String::new(),
             })
         }
         Err(e) => {
-            eprintln!("Failed to open \"{}\". Error: {}", PORT_NAME, e);
+            eprintln!("Failed to open \"{}\". Error: {}", port.to_string_lossy(), e);
             Err(e)
         }
     }
