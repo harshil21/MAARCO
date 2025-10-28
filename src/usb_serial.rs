@@ -8,10 +8,14 @@ use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct SensorData {
+    pub motor_1_rpm: f32,
+    pub motor_2_rpm: f32,
+    pub motor_1_tot_rotations: f32,
+    pub motor_2_tot_rotations: f32,
     pub time_ms: u32,
-    pub roll: f32,
-    pub pitch: f32,
-    pub yaw: f32,
+    // pub roll: f32,
+    // pub pitch: f32,
+    // pub yaw: f32,
     pub current_motor_1_ma: f32,
     pub current_motor_2_ma: f32,
     // pub acc_x: f32,
@@ -64,34 +68,43 @@ impl ArduinoSerialPort {
 
                 // Parse the line into SensorData
                 let parts: Vec<&str> = trimmed.split(",").map(|s| s.trim()).collect();
-                if parts.len() != 9 {
+                if parts.len() != 10 {
+                    println!("Invalid Arduino data line: {}", trimmed);
                     return Err(Error::new(
                         serialport::ErrorKind::Io(std::io::ErrorKind::InvalidData),
-                        format!("Expected 9 parts, got {}", parts.len()),
+                        format!("Expected 10 parts, got {}", parts.len()),
                     ));
                 }
 
-                let time_ms: u32 = parts[0].parse().unwrap();
-                let roll: f32 = parts[1].parse().unwrap();
-                let pitch: f32 = parts[2].parse().unwrap();
-                let yaw: f32 = parts[3].parse().unwrap();
-                let current_motor_1_ma: f32 = parts[4].parse().unwrap();
-                let current_motor_2_ma: f32 = parts[5].parse().unwrap();
-                let sonar_mm: f32 = parts[6].parse().unwrap();
-                let tof1_mm: f32 = parts[7].parse().unwrap();
-                let tof2_mm: f32 = parts[8].parse().unwrap();
+                let motor_1_rpm: f32 = parts[0].parse().unwrap();
+                let motor_2_rpm: f32 = parts[1].parse().unwrap();
+                let motor_1_tot_rotations: f32 = parts[2].parse().unwrap();
+                let motor_2_tot_rotations: f32 = parts[3].parse().unwrap();
+                let time_ms: u32 = parts[4].parse().unwrap();
+                // let roll: f32 = parts[5].parse().unwrap();
+                // let pitch: f32 = parts[6].parse().unwrap();
+                // let yaw: f32 = parts[7].parse().unwrap();
+                let current_motor_1_ma: f32 = parts[5].parse().unwrap();
+                let current_motor_2_ma: f32 = parts[6].parse().unwrap();
+                let sonar_mm: f32 = parts[7].parse().unwrap();
+                let tof1_mm: f32 = parts[8].parse().unwrap();
+                let tof2_mm: f32 = parts[9].parse().unwrap();
                 // let acc_x: f32 = parts[7].parse().unwrap();
                 // let acc_y: f32 = parts[8].parse().unwrap();
                 // let acc_z: f32 = parts[9].parse().unwrap();
 
                 let data = SensorData {
+                    motor_1_rpm,
+                    motor_2_rpm,
+                    motor_1_tot_rotations,
+                    motor_2_tot_rotations,
                     time_ms,
                     sonar_mm,
                     tof1_mm,
                     tof2_mm,
-                    roll,
-                    pitch,
-                    yaw,
+                    // roll,
+                    // pitch,
+                    // yaw,
                     current_motor_1_ma,
                     current_motor_2_ma,
                     // acc_x,
